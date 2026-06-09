@@ -8,7 +8,8 @@ import { incrementQuantity, decrementQuantity } from "./venueSlice";
 import { incrementAvQuantity, decrementAvQuantity } from "./avSlice";
 import { toggleMealSelection } from "./mealsSlice";
 
-const ConferenceEvent = () => {
+const ConferenceEvent = () => 
+{
     const [showItems, setShowItems] = useState(false);
     const [numberOfPeople, setNumberOfPeople] = useState(1);
     const venueItems = useSelector((state) => state.venue);
@@ -18,32 +19,39 @@ const ConferenceEvent = () => {
     const remainingAuditoriumQuantity = 3 - venueItems.find(item => item.name === "Auditorium Hall (Capacity:200)").quantity;
 
 
-    const handleToggleItems = () => {
+    const handleToggleItems = () => 
+    {
         console.log("handleToggleItems called");
         setShowItems(!showItems);
     };
 
-    const handleAddToCart = (index) => {
-        if (venueItems[index].name === "Auditorium Hall (Capacity:200)" && venueItems[index].quantity >= 3) {
+    const handleAddToCart = (index) => 
+    {
+        if (venueItems[index].name === "Auditorium Hall (Capacity:200)" && venueItems[index].quantity >= 3)
+        {
           return; 
         }
         dispatch(incrementQuantity(index));
     };
     
-    const handleRemoveFromCart = (index) => {
-        if (venueItems[index].quantity > 0) {
+    const handleRemoveFromCart = (index) => 
+    {
+        if (venueItems[index].quantity > 0) 
+        {
           dispatch(decrementQuantity(index));
         }
     };
 
     // --- Added logic for AV Handlers ---
-    const handleIncrementAvQuantity = (index) => {
+    const handleIncrementAvQuantity = (index) => 
+    {
         // Dispatching increment for AV items
         // Adjust the action name if your slice uses something like incrementAvQuantity
         dispatch(incrementQuantity(index)); 
     };
 
-    const handleDecrementAvQuantity = (index) => {
+    const handleDecrementAvQuantity = (index) => 
+    {
         if (avItems[index].quantity > 0) {
             // Dispatching decrement for AV items
             dispatch(decrementQuantity(index));
@@ -65,17 +73,74 @@ const ConferenceEvent = () => {
 
     const getItemsFromTotalCost = () => {
         const items = [];
+        venueItems.forEach((item) => {
+          if (item.quantity > 0) {
+            items.push({ ...item, type: "venue" });
+          }
+        });
+        avItems.forEach((item) => {
+          if (
+            item.quantity > 0 &&
+            !items.some((i) => i.name === item.name && i.type === "av")
+          ) {
+            items.push({ ...item, type: "av" });
+          }
+        });
+        mealsItems.forEach((item) => {
+          if (item.selected) {
+            const itemForDisplay = { ...item, type: "meals" };
+            if (item.numberOfPeople) {
+              itemForDisplay.numberOfPeople = numberOfPeople;
+            }
+            items.push(itemForDisplay);
+          }
+        });
         return items;
-    };
+      };
+    
 
     const items = getItemsFromTotalCost();
 
     const ItemsDisplay = ({ items }) => {
-
+        console.log(items);
+        return <>
+            <div className="display_box1">
+                {items.length === 0 && <p>No items selected</p>}
+                <table className="table_item_data">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Unit Cost</th>
+                            <th>Quantity</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {items.map((item, index) => (
+                            <tr key={index}>
+                                <td>{item.name}</td>
+                                <td>${item.cost}</td>
+                                <td>
+                                    {item.type === "meals" || item.numberOfPeople
+                                    ? ` For ${numberOfPeople} people`
+                                    : item.quantity}
+                                </td>
+                                <td>{item.type === "meals" || item.numberOfPeople
+                                    ? `${item.cost * numberOfPeople}`
+                                    : `${item.cost * item.quantity}`}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+        </>
     };
+    
 
     // --- Updated Cost Calculation to support AV/Add-ons ---
-    const calculateTotalCost = (section) => {
+    const calculateTotalCost = (section) => 
+    {
         let totalCost = 0;
         if (section === "venue") {
             venueItems.forEach((item) => {
@@ -99,13 +164,22 @@ const ConferenceEvent = () => {
     const venueTotalCost = calculateTotalCost("venue");
     const avTotalCost = calculateTotalCost("av"); // Dynamically calculates total for Add-ons
 
-    const navigateToProducts = (idType) => {
+    const navigateToProducts = (idType) => 
+    {
         if (idType == '#venue' || idType == '#addons' || idType == '#meals') {
           if (showItems) { 
             setShowItems(!showItems); 
           }
         }
     }
+
+    const totalCosts = 
+    {
+        venue: venueTotalCost,
+        av: avTotalCost,
+        meals: mealsTotalCost,
+    };
+    
 
     return (
         <>
